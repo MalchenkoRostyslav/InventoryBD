@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Залізний Рубіж — Підземелля</title>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Philosopher:wght@400;700&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+  <section class="panel">
+    <h2>Підземелля</h2>
+    <p class="hint">Кожне підземелля вимагає певної сили спорядження і відновлюється після походу.</p>
+    <div class="cards" id="cards"></div>
+  </section>
+</main>
+<div class="modal" id="modal" hidden>
+  <div>
+    <div class="flip" id="flip" tabindex="0">
+      <div class="flip-in">
+        <div class="face front">?</div>
+        <div class="face back"><div class="hint">Здобич</div><div class="big" id="loot"></div><button class="btn" id="close">Забрати</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/app.js"></script>
+<script>
+let gear = 0, dungeons = [];
+const timers = [];   // { btn, bar, endAt, total }
+
+function draw() {
+  timers.length = 0;
+  const box = $('#cards'); box.innerHTML = '';
+  dungeons.forEach(d => {
+    const locked = gear < d.requiredGearScore;
+    const c = document.createElement('article'); c.className = 'card dun' + (locked ? ' locked' : '');
+    c.innerHTML = `<h3>${d.name}</h3>
+      <div class="meta">Потрібна сила: <b>${d.requiredGearScore}</b>${locked ? ` (у тебе ${gear})` : ''}</div>
+      <div class="meta grow">Здобич: ${d.rewardText}<br>Відновлення: ${d.cooldownSeconds} с</div>
+      <div class="bar"><i></i></div>`;
+    const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'В бій';
+    b.disabled = locked;
+    b.onclick = () => enter(d, b);
+    c.append(b); box.append(c);
+    if (d.secondsLeft > 0) timers.push({ btn: b, bar: c.querySelector('.bar>i'), endAt: Date.now() + d.secondsLeft * 1000, total: d.cooldownSeconds * 1000 });
+  });
+}
+
+setInterval(() => {
+  const now = Date.now();
+  timers.forEach(t => {
+    const left = t.endAt - now;
+    if (left > 0) { t.btn.disabled = true; t.btn.textContent = Math.ceil(left / 1000) + ' с'; t.bar.style.width = (left / t.total * 100) + '%'; }
+    else if (t.endAt) { t.endAt = 0; t.btn.disabled = false; t.btn.textContent = 'В бій'; t.bar.style.width = 0; }
+  });
+}, 250);
+
+async function enter(d, btn) {
+  btn.disabled = true;
+  try {
+    const r = await api('/api/dungeon/enter', 'POST', { dungeonId: d.dungeonId });
+    setWealth(r.currency);
+    $('#loot').textContent = r.rewardText;
+    $('#flip').classList.remove('open'); $('#modal').hidden = false;
+    setTimeout(() => $('#flip').classList.add('open'), 450);
+    d.secondsLeft = r.cooldownSeconds; draw();
+  } catch (e) { toast(e.message, true); dungeons = await api('/api/dungeon'); draw(); }
+}
+$('#close').onclick = () => { $('#modal').hidden = true; };
+
+initPage('dungeons.html').then(async me => {
+  gear = me.gearScore; dungeons = await api('/api/dungeon'); draw();
+}).catch(e => toast(e.message, true));
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Залізний Рубіж — Герой</title>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Philosopher:wght@400;700&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="cols">
+  <section class="panel">
+    <h2>Спорядження</h2>
+    <div class="doll" id="doll"></div>
+    <div class="stats">
+      <div class="stat"><b id="sGear">0</b><span>Сила спорядження</span></div>
+      <div class="stat"><b id="sItems">0</b><span>Предметів</span></div>
+      <div class="stat"><b id="sEq">0</b><span>Одягнено</span></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Рюкзак</h2>
+    <div class="grid" id="grid"></div>
+    <div class="detail" id="detail"><span class="hint">Перетягни предмет у слот героя, щоб одягнути, або в іншу комірку, щоб переставити. Клік показує деталі, подвійний клік одягає чи знімає.</span></div>
+  </section>
+</main>
+<script src="js/app.js"></script>
+<script>
+let state = { items: [], slots: [], capacity: 30 }, dragged = null, selected = null;
+
+const figure = `<svg class="figure" viewBox="0 0 130 300" aria-hidden="true"><g fill="none" stroke="#8a6a24" stroke-width="3">
+  <circle cx="65" cy="42" r="26"/><path d="M33 90h64l14 80-16 6-8 60h-24v60h-12v-60h-24l-8-60-16-6z"/></g></svg>`;
+
+async function load() {
+  const [inv, me] = await Promise.all([api('/api/inventory'), api('/api/player/me')]);
+  state = inv; render(me);
+}
+
+function render(me) {
+  // лялька зі слотами (слоти беруться з таблиці EquipSlots)
+  const doll = $('#doll'); doll.innerHTML = figure;
+  state.slots.forEach((s, i) => {
+    const wrap = document.createElement('div'); wrap.className = 'slot-wrap';
+    wrap.style.gridColumn = i % 2 === 0 ? 1 : 3; wrap.style.gridRow = Math.floor(i / 2) + 1;
+    const slot = document.createElement('div'); slot.className = 'slot'; slot.dataset.slot = s.slotId;
+    slot.innerHTML = `<small>${s.name}</small>`;
+    const eq = state.items.find(x => x.isEquipped && x.slotId === s.slotId);
+    if (eq) { const e = itemEl(eq); e.style.position = 'absolute'; e.style.inset = '0'; slot.append(e); }
+    wrap.append(slot); doll.append(wrap);
+  });
+  // рюкзак
+  const grid = $('#grid'); grid.innerHTML = '';
+  for (let i = 0; i < state.capacity; i++) {
+    const c = document.createElement('div'); c.className = 'cell'; c.dataset.index = i;
+    const it = state.items.find(x => !x.isEquipped && x.gridIndex === i);
+    if (it) c.append(itemEl(it));
+    grid.append(c);
+  }
+  $('#sGear').textContent = me.gearScore; $('#sItems').textContent = me.itemsCount; $('#sEq').textContent = me.equippedCount;
+  setGear(me.gearScore); setWealth(me.currency);
+  if (selected) showDetail(state.items.find(x => x.inventoryId === selected));
+}
+
+function showDetail(it) {
+  const d = $('#detail');
+  if (!it) { selected = null; return; }
+  selected = it.inventoryId;
+  d.innerHTML = `<div class="nm" style="color:${it.colorHex}">${it.itemName}</div>
+    <div class="hint">${it.rarityName} · ${it.slotName || 'без слота'} · базова сила ${it.basePower} × ${it.statMultiplier}</div>
+    <div class="row"><b>Сила: ${it.effectivePower}</b>
+    <button class="btn" id="tg">${it.isEquipped ? 'Зняти' : 'Одягнути'}</button></div>`;
+  $('#tg').onclick = () => equip(it, !it.isEquipped);
+}
+
+async function equip(it, on) {
+  try { await api('/api/inventory/equip', 'POST', { inventoryId: it.inventoryId, equip: on }); await load(); }
+  catch (e) { toast(e.message, true); }
+}
+
+// ===== Drag & Drop =====
+document.addEventListener('dragstart', e => {
+  const el = e.target.closest?.('.item'); if (!el) return;
+  dragged = state.items.find(x => x.inventoryId == el.dataset.id);
+  e.dataTransfer.setData('text/plain', el.dataset.id); e.dataTransfer.effectAllowed = 'move';
+});
+document.addEventListener('dragover', e => {
+  const t = e.target.closest?.('.slot, .cell'); if (!t) return;
+  e.preventDefault(); t.classList.add('over');
+  if (t.classList.contains('slot') && dragged && dragged.slotId != t.dataset.slot) t.classList.add('bad');
+});
+document.addEventListener('dragleave', e => e.target.closest?.('.slot, .cell')?.classList.remove('over', 'bad'));
+document.addEventListener('drop', async e => {
+  const t = e.target.closest?.('.slot, .cell'); if (!t || !dragged) return;
+  e.preventDefault(); t.classList.remove('over', 'bad');
+  try {
+    if (t.classList.contains('slot')) {
+      if (dragged.slotId != t.dataset.slot) throw new Error('Цей предмет не підходить до цього слота.');
+      if (!dragged.isEquipped) await api('/api/inventory/equip', 'POST', { inventoryId: dragged.inventoryId, equip: true });
+    } else {
+      await api('/api/inventory/move', 'POST', { inventoryId: dragged.inventoryId, targetIndex: +t.dataset.index });
+    }
+    await load();
+  } catch (err) { toast(err.message, true); }
+  dragged = null;
+});
+document.addEventListener('dragend', () => document.querySelectorAll('.over,.bad').forEach(x => x.classList.remove('over', 'bad')));
+document.addEventListener('click', e => {
+  const el = e.target.closest?.('.item'); if (!el) return;
+  document.querySelectorAll('.item.sel').forEach(x => x.classList.remove('sel')); el.classList.add('sel');
+  showDetail(state.items.find(x => x.inventoryId == el.dataset.id));
+});
+document.addEventListener('dblclick', e => {
+  const el = e.target.closest?.('.item'); if (!el) return;
+  const it = state.items.find(x => x.inventoryId == el.dataset.id); equip(it, !it.isEquipped);
+});
+
+initPage('hero.html').then(load).catch(e => toast(e.message, true));
+</script>
+</body>
+</html>

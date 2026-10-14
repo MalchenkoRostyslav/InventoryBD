@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Залізний Рубіж — Крамниця</title>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Philosopher:wght@400;700&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+  <section class="panel">
+    <h2>Крамниця збройаря</h2>
+    <p class="hint">Усе, що купуєш тут, лягає в рюкзак зі звичайною якістю. Рідкісне добувають у підземеллях.</p>
+    <div class="cards" id="cards"></div>
+  </section>
+</main>
+<script src="js/app.js"></script>
+<script>
+let wealth = 0, shop = [];
+function draw() {
+  const box = $('#cards'); box.innerHTML = '';
+  shop.forEach(it => {
+    const c = document.createElement('article'); c.className = 'card';
+    const row = document.createElement('div'); row.className = 'top-row';
+    const th = document.createElement('div'); th.className = 'thumb item'; th.style.cursor = 'default';
+    th.append(iconNode(it.iconPath, it.slotName));
+    row.append(th);
+    row.insertAdjacentHTML('beforeend', `<div><h3>${it.name}</h3><div class="hint">${it.slotName || 'Різне'} · сила ${it.power}</div></div>`);
+    c.append(row);
+    c.insertAdjacentHTML('beforeend', `<div class="grow price">${it.costText}</div>`);
+    const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Купити';
+    b.disabled = it.cost > wealth;
+    b.onclick = async () => {
+      b.disabled = true;
+      try {
+        const r = await api('/api/shop/buy', 'POST', { itemId: it.itemId });
+        wealth = r.wealth; setWealth(r.currency); toast('Куплено: ' + it.name); draw();
+      } catch (e) { toast(e.message, true); b.disabled = false; }
+    };
+    c.append(b); box.append(c);
+  });
+}
+initPage('shop.html').then(async me => {
+  wealth = me.wealth; shop = await api('/api/shop'); draw();
+}).catch(e => toast(e.message, true));
+</script>
+</body>
+</html>

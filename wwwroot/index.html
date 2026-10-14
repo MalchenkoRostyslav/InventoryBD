@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Залізний Рубіж — Вхід</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Philosopher:wght@400;700&display=swap&subset=cyrillic" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login">
+  <div class="panel">
+    <h1>Залізний Рубіж</h1>
+    <p>Назви себе, герою. Нове ім'я створить нового мандрівника, відоме — поверне до справ.</p>
+    <input id="nick" type="text" maxlength="20" placeholder="Твій нікнейм" autofocus>
+    <button class="btn" id="go">Увійти до рубежу</button>
+  </div>
+</div>
+<script src="js/app.js"></script>
+<script>
+  if (localStorage.getItem('pid')) location.href = 'hero.html';
+  async function enter() {
+    try {
+      const p = await api('/api/player/login', 'POST', { nickname: $('#nick').value });
+      localStorage.setItem('pid', p.playerId);
+      location.href = 'hero.html';
+    } catch (e) { toast(e.message, true); }
+  }
+  $('#go').onclick = enter;
+  $('#nick').addEventListener('keydown', e => e.key === 'Enter' && enter());
+</script>
+</body>
+</html>

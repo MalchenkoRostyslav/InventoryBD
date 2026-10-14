@@ -1,0 +1,114 @@
+:root{
+  --bg:#15100c; --bg2:#1f1812; --panel:#2a2018; --panel2:#33271d;
+  --brass:#c89b3c; --brass-d:#8a6a24; --parch:#eadfc4; --muted:#a8977a;
+  --ember:#b8482b; --moss:#6f8f52; --line:#4a3a28;
+  --head:'Philosopher','Georgia',serif; --body:'Alegreya','Georgia',serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh; color:var(--parch); font:18px/1.45 var(--body);
+  background:
+    radial-gradient(ellipse at 50% -10%, #3a2a1a 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 120%, #2b1510 0%, transparent 55%),
+    var(--bg);
+}
+h1,h2,h3{font-family:var(--head); margin:0; letter-spacing:.02em; color:var(--brass); font-weight:700}
+h1{font-size:2.6rem} h2{font-size:1.5rem} h3{font-size:1.15rem}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--brass); outline-offset:2px}
+
+/* ===== Верхня панель ===== */
+.top{position:sticky; top:0; z-index:20; display:flex; gap:1.5rem; align-items:center; flex-wrap:wrap;
+  padding:.7rem 1.5rem; background:linear-gradient(#241a12,#1a130d); border-bottom:2px solid var(--brass-d);
+  box-shadow:0 6px 18px #0009}
+.brand{font:700 1.4rem var(--head); color:var(--brass); text-decoration:none}
+.nav{display:flex; gap:.3rem; flex:1}
+.nav a{padding:.4rem .9rem; text-decoration:none; color:var(--muted); border:1px solid transparent; border-radius:3px; font-family:var(--head)}
+.nav a:hover{color:var(--parch)}
+.nav a.on{color:var(--parch); border-color:var(--brass-d); background:#3a2b1c}
+.who{display:flex; gap:.8rem; align-items:center; flex-wrap:wrap}
+.chip{display:inline-flex; gap:.35rem; align-items:center; padding:.15rem .6rem; background:#120d09; border:1px solid var(--line); border-radius:99px; font-size:.95rem}
+.chip b{color:var(--brass)}
+.btn-link{background:none; border:0; color:var(--muted); cursor:pointer; font:inherit; text-decoration:underline}
+
+/* ===== Каркас ===== */
+main{max-width:1180px; margin:0 auto; padding:1.5rem}
+.panel{background:linear-gradient(var(--panel),#241a12); border:1px solid var(--line); border-radius:6px; padding:1.2rem;
+  box-shadow: inset 0 0 0 3px #1a130d, inset 0 0 0 4px var(--brass-d), 0 8px 22px #0007}
+.panel>h2{margin-bottom:.8rem}
+.cols{display:grid; grid-template-columns:minmax(300px,400px) 1fr; gap:1.2rem; align-items:start}
+@media(max-width:860px){.cols{grid-template-columns:1fr}}
+
+/* ===== Кнопки ===== */
+.btn{font:700 1rem var(--head); color:#1a1209; background:linear-gradient(#e0b653,#b78a2c); border:1px solid #6d4f14;
+  padding:.5rem 1.1rem; border-radius:4px; cursor:pointer; box-shadow:0 2px 0 #6d4f14}
+.btn:hover:not(:disabled){filter:brightness(1.1)}
+.btn:active:not(:disabled){transform:translateY(2px); box-shadow:none}
+.btn:disabled{background:#3b3025; color:#7d6e58; border-color:#4a3a28; box-shadow:none; cursor:not-allowed}
+.btn.ghost{background:none; color:var(--parch); border-color:var(--brass-d); box-shadow:none}
+
+/* ===== Предмети ===== */
+.item{--rc:#9d9d9d; position:relative; width:100%; height:100%; display:grid; place-items:center; cursor:grab;
+  background:radial-gradient(circle at 50% 35%, color-mix(in srgb,var(--rc) 28%, #1b140e), #130e0a);
+  border:2px solid var(--rc); border-radius:5px; user-select:none}
+.item:active{cursor:grabbing}
+.item .ico{font-size:2rem; line-height:1} .item img{max-width:78%; max-height:78%; image-rendering:pixelated; pointer-events:none}
+.item .pw{position:absolute; right:3px; bottom:1px; font:700 .75rem var(--head); color:var(--parch); text-shadow:0 1px 2px #000}
+.item.sel{box-shadow:0 0 0 2px var(--brass), 0 0 14px var(--rc)}
+
+/* ===== Героя: лялька + рюкзак ===== */
+.doll{display:grid; grid-template-columns:1fr 130px 1fr; gap:.6rem; align-items:center; justify-items:center}
+.doll .figure{grid-column:2; grid-row:1 / span 4; width:130px; opacity:.85}
+.slot{width:78px; height:78px; background:#100b08; border:2px dashed var(--brass-d); border-radius:6px; position:relative}
+.slot>small{position:absolute; left:0; right:0; top:-1.25rem; text-align:center; color:var(--muted); font-size:.8rem; white-space:nowrap}
+.slot.over,.cell.over{border-color:var(--brass); background:#2a1d10}
+.slot.bad{border-color:var(--ember)}
+.slot-wrap{padding-top:1.3rem}
+.stats{display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1.2rem}
+.stat{flex:1; min-width:100px; text-align:center; padding:.5rem; background:#120d09; border:1px solid var(--line); border-radius:4px}
+.stat b{display:block; font:700 1.6rem var(--head); color:var(--brass)}
+.stat span{color:var(--muted); font-size:.9rem}
+.grid{display:grid; grid-template-columns:repeat(6,1fr); gap:6px}
+.cell{aspect-ratio:1; background:#100b08; border:1px solid var(--line); border-radius:4px}
+.detail{margin-top:1rem; min-height:92px; padding:.8rem; background:#120d09; border:1px solid var(--line); border-radius:4px}
+.detail .nm{font:700 1.2rem var(--head)}
+.detail .row{display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-top:.5rem}
+.hint{color:var(--muted); font-size:.95rem}
+
+/* ===== Крамниця / підземелля ===== */
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:1rem}
+.card{display:flex; flex-direction:column; gap:.5rem; padding:1rem; background:var(--panel2); border:1px solid var(--line); border-radius:6px}
+.card .top-row{display:flex; gap:.8rem; align-items:center}
+.card .thumb{width:62px; height:62px; flex:none}
+.card .price{color:var(--brass); font-family:var(--head)}
+.card .grow{flex:1}
+.dun{border-left:4px solid var(--brass-d)}
+.dun.locked{opacity:.6; border-left-color:var(--ember)}
+.dun .meta{color:var(--muted); font-size:.95rem}
+.bar{height:6px; background:#120d09; border-radius:3px; overflow:hidden}
+.bar>i{display:block; height:100%; width:0; background:var(--ember)}
+
+/* ===== Вхід ===== */
+.login{min-height:100vh; display:grid; place-items:center; padding:1.5rem}
+.login .panel{width:min(440px,100%); text-align:center; padding:2rem}
+.login h1{margin-bottom:.4rem}
+.login p{color:var(--muted); margin:.2rem 0 1.4rem}
+input[type=text]{width:100%; padding:.7rem .9rem; margin-bottom:1rem; font:inherit; font-size:1.1rem; color:var(--parch);
+  background:#120d09; border:1px solid var(--brass-d); border-radius:4px; text-align:center}
+
+/* ===== Тости та модалка ===== */
+#toasts{position:fixed; right:1rem; bottom:1rem; display:grid; gap:.5rem; z-index:50}
+.toast{padding:.7rem 1rem; background:#1a130d; border:1px solid var(--moss); border-left:4px solid var(--moss); border-radius:4px; box-shadow:0 6px 18px #000a; max-width:340px}
+.toast.bad{border-color:var(--ember)}
+.modal{position:fixed; inset:0; background:#000b; display:grid; place-items:center; z-index:40; padding:1rem}
+.modal[hidden]{display:none}
+.flip{perspective:900px; width:280px; height:360px; cursor:pointer}
+.flip-in{position:relative; width:100%; height:100%; transition:transform .9s cubic-bezier(.2,.8,.2,1); transform-style:preserve-3d}
+.flip.open .flip-in{transform:rotateY(180deg)}
+.face{position:absolute; inset:0; backface-visibility:hidden; display:grid; place-items:center; text-align:center; padding:1.4rem;
+  border-radius:10px; border:3px solid var(--brass)}
+.face.front{background:repeating-linear-gradient(45deg,#2a1d10 0 12px,#33261a 12px 24px); font:700 5rem var(--head); color:var(--brass)}
+.face.back{transform:rotateY(180deg); background:radial-gradient(circle at 50% 30%,#4a3517,#1c130b); flex-direction:column}
+.face.back .big{font:700 1.7rem var(--head); color:var(--brass); margin:.6rem 0}
+@media (prefers-reduced-motion:reduce){.flip-in{transition:none}}
